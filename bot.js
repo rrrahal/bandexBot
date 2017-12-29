@@ -7,7 +7,7 @@ const cardapios = require('./cardapios');
 const mensagens = require('./mensagens');
 const notifications = require('./notifications');
 
-let token = "";
+let token = "486938842:AAHc24zvJ3U-03O-pGp-0bnXwHrUegX7Bnk";
 let bot = new TelegramBot(token, { polling: true });
 winston.add(winston.transports.File, { filename: 'logs/actions.log' });
 moment.locale('pt-br');
@@ -36,10 +36,10 @@ bot.on('callback_query', function onCallbackQuery(callbackQuery) {
     //log das atividades
     if(from.username)
         winston.info({action: action, user: from.username, group: msg.chat.title, userid: userid});
-    else 
+    else
         winston.info({action: action, user: from.first_name + " " + from.last_name, group: msg.chat.title, userid: userid});
 
-    //pra voltar pro anterior sempre começa com back 
+    //pra voltar pro anterior sempre começa com back
     if(action.startsWith("BACK")) {
         action = action.split(/_(.+)/)[1]; //regex para splitar apenas no primeiro "_"
     }
