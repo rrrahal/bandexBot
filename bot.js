@@ -79,7 +79,7 @@ bot.on('callback_query', function onCallbackQuery(callbackQuery) {
         let splitter = action.split("_");
         let list = cardapios.getBandexList();
         notifications.fillListWithNotifications(userid, list, splitter[1]);
-        comm = mensagens.prepareForEdit(mensagens["NOTILIST"], msg, {list: list, time: splitter[1], page: splitter[2]});
+        comm = mensagens.prepareForEd(mensagens["NOTILIST"], msg, {list: list, time: splitter[1], page: splitter[2]});
     }
     //ligar/desligar notificações de um bandejão
     //parametros: almoco/janta, pagina e bandex
@@ -91,8 +91,14 @@ bot.on('callback_query', function onCallbackQuery(callbackQuery) {
         notifications.fillListWithNotifications(userid, list, splitter[1]);
         comm = mensagens.prepareForEdit(mensagens["NOTILIST"], msg, {list: list, time: splitter[1], page: splitter[2]});
     }
+
+    else if (action.startsWith("CHANGETIME")) {
+      let splitter = action.split("_");
+      comm = mensagens.prepareForEdit(mensagens["CHANGETIME"], msg , {time: splitter[1]});
+      // notifications prepare ou prepare for edit quais parametros?
+    }
     else {
-        comm = mensagens.prepareForEdit(mensagens[action], msg);
+        comm = mensagens.prepareForEdit(mensagens[action], {time: splitter[1]});
     }
 
     if(noEdit)

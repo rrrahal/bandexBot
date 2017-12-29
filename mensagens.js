@@ -11,11 +11,12 @@ var self = module.exports = {
     NOTIPAUSE: 5,
     NOTILIST: 6,
     NOTITOGGLE: 7,
+    CHANGETIME: 8,
 
     prepare: prepare,
     prepareForEdit: prepareForEdit,
     getDigestTitle: getDigestTitle,
-    getDigestEntry: getDigestEntry    
+    getDigestEntry: getDigestEntry
 };
 
 //preparar alguma mensagem (e teclado de resposta) para envio
@@ -42,7 +43,7 @@ function prepare(index, params) {
                         callback_data: 'DUPE_INITIAL'
                     }
                 ]
-            ]; 
+            ];
             break;
 
         case self.INITIAL:
@@ -76,7 +77,7 @@ function prepare(index, params) {
         case self.BNDLIST:
             wrapper.text = (params.time == "ALMOCO") ? "☀️ *Ver Almoço*" : "🌙 *Ver Janta*";
             wrapper.text += "\nSelecione um bandejão:";
-            wrapper.opts.reply_markup.inline_keyboard = buildBandexList(params.list, 
+            wrapper.opts.reply_markup.inline_keyboard = buildBandexList(params.list,
                 `BNDLIST_${params.time}_${params.page}`, `BNDFULL_${params.time}_`, "INITIAL");
             break;
 
@@ -94,7 +95,7 @@ function prepare(index, params) {
 
         case self.NOTIFICATIONS:
             let optext;
-            wrapper.text = `⚙️ *Gerenciar Notificações*\n`;        
+            wrapper.text = `⚙️ *Gerenciar Notificações*\n`;
             if(params.paused) {
                 wrapper.text += `Suas notificações estão pausadas. Clique em *Resumir Notificações* para ligá-las de novo.`;
                 optext = '▶️ Resumir Notificações';
@@ -114,20 +115,26 @@ function prepare(index, params) {
                         text: '🌙 Janta',
                         callback_data: 'NOTILIST_JANTA_0'
                     }
-                ],           
+                ],
                 [
                     {
                         text: optext,
                         callback_data: 'NOTIPAUSE'
                     }
-                ],            
+                ],
+                [
+                    {
+                        text: "Mudar horário de notificações: almoço",
+                        callback_data: 'CHANGETIME_ALMOCO'
+                    }
+                ],
                 [
                     {
                         text: '⬅️ Voltar',
                         callback_data: 'BACK_INITIAL'
                     }
                 ]
-            ]; 
+            ];
             break;
 
         case self.NOTIPAUSE:
@@ -135,28 +142,36 @@ function prepare(index, params) {
                 wrapper.text = `⏸ *Pausar Notificações*\nSuas notificações foram pausadas.`;
             else
                 wrapper.text = `▶️ *Resumir Notificações*\nSuas notificações foram resumidas.`;
-            wrapper.opts.reply_markup.inline_keyboard = [          
+            wrapper.opts.reply_markup.inline_keyboard = [
                 [
                     {
                         text: '⬅️ Voltar',
                         callback_data: 'BACK_NOTIFICATIONS'
                     }
                 ]
-            ]; 
+            ];
             break;
 
         case self.NOTILIST:
             if(params.time == "ALMOCO") {
-                wrapper.text = "☀️ *Notificações de Almoço*\nToque em um bandejão para ligar ou desligar as notificações dele.\n " 
+                wrapper.text = "☀️ *Notificações de Almoço*\nToque em um bandejão para ligar ou desligar as notificações dele.\n "
                     + "Você receberá uma notificação com o cardápio dos bandejões selecionados *todos os dias úteis às 11h30*.";
             }
             else {
-                wrapper.text = "🌙 *Notificações de Janta*\nToque em um bandejão para ligar ou desligar as notificações dele.\n " 
-                    + "Você receberá uma notificação com o cardápio dos bandejões selecionados *todos os dias úteis às 18h30*.";                
+                wrapper.text = "🌙 *Notificações de Janta*\nToque em um bandejão para ligar ou desligar as notificações dele.\n "
+                    + "Você receberá uma notificação com o cardápio dos bandejões selecionados *todos os dias úteis às 18h30*.";
             }
-            wrapper.opts.reply_markup.inline_keyboard = buildBandexList(params.list, 
+            wrapper.opts.reply_markup.inline_keyboard = buildBandexList(params.list,
                 `NOTILIST_${params.time}_${params.page}`, `NOTITOGGLE_${params.time}_${params.page}_`, "NOTIFICATIONS");
             break;
+
+        case self.CHANGETIME:
+          if(params.time == "ALMOCO") {
+           wrapper.text = 'Selecione um horário pra ser notificado no almoço:';
+           wrapper.opts.reply_markup.inline_keyboard = getAvailableTimeAlmoco();
+         }
+           break;
+
     }
     return wrapper;
 }
@@ -185,7 +200,7 @@ function buildBandexList(list, state, preffix, back) {
         row = [];
         text = list[index].name;
         if(typeof list[index].subscribed != "undefined") {
-            if(list[index].subscribed) 
+            if(list[index].subscribed)
                 text = "🔔 " + text;
             else
                 text = "🔕 " + text;
@@ -196,7 +211,7 @@ function buildBandexList(list, state, preffix, back) {
         });
         text = list[index+1].name;
         if(typeof list[index+1].subscribed != "undefined") {
-            if(list[index+1].subscribed) 
+            if(list[index+1].subscribed)
                 text = "🔔 " + text;
             else
                 text = "🔕 " + text;
@@ -204,9 +219,9 @@ function buildBandexList(list, state, preffix, back) {
         row.push({
             text: text,
             callback_data: preffix+list[index+1].code
-        });  
-        keyboard.push(row);    
-        index += 2;          
+        });
+        keyboard.push(row);
+        index += 2;
     }
 
     //adicionar paginaçao
@@ -287,4 +302,31 @@ function getDigestEntry(menu) {
         text += `       🚫 Nada consta, provavelmente fechado 🚫\n\n`;
     }
     return text;
+}
+
+
+function getAvailableTimeAlmoco() {
+    let keyboard = [];
+    let horarios = [["10:45", "11:30"], ["12:15", "13:00"]];
+    for (var i = 0; i < horarios.length; i++) {
+      const [horario_1, horario_2] = horarios[i]
+      const row = []
+      // o callback recebe um id pra cada horario: 0 pro primeiro, 1 pro segundo, etc.
+      row.push({
+          text: horario_1,
+          callback_data: 'CHANGETIME_ALMOCO_' + (i).toString()
+      });
+      row.push({
+        text: horario_2,
+        callback_data: 'CHANGETIME_ALMOCO_' + (i+1).toString()
+      })
+      keyboard.push(row);
+    }
+    const row = [];
+    row.push({
+        text: "⬅️ Voltar",
+        callback_data: "NOTIFICATIONS"
+    });
+    keyboard.push(row);
+    return keyboard;
 }
