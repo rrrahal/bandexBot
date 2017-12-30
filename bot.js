@@ -94,11 +94,19 @@ bot.on('callback_query', function onCallbackQuery(callbackQuery) {
 
     else if (action.startsWith("CHANGETIME")) {
       let splitter = action.split("_");
-      comm = mensagens.prepareForEdit(mensagens["CHANGETIME"], msg , {time: splitter[1]});
-      // notifications prepare ou prepare for edit quais parametros?
+      if (splitter[2] == undefined) {
+        comm = mensagens.prepareForEdit(mensagens["CHANGETIME"], msg , {time: splitter[1]});
+      }
+      else {
+        // FAZER MUDAR HORARIO
+        // CONSIGO PASSAR SE É ALMOCO OU JANTA E O id do horário
+        comm = comm = mensagens.prepareForEdit(mensagens["NOTIFICATIONS"], msg, {paused: notifications.isPaused(userid)});
+      }
+
     }
+
     else {
-        comm = mensagens.prepareForEdit(mensagens[action], {time: splitter[1]});
+        comm = mensagens.prepareForEdit(mensagens[action], msg);
     }
 
     if(noEdit)
